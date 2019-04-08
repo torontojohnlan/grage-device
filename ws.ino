@@ -1,15 +1,18 @@
+const char *wsHost = "myanee.herokuapp.com", *wsPath = "/ws";
+
 WebSocketsClient ws;
 
 bool setupWS()
 {
   // server address, port and URL
-  ws.begin(wsHost, wsPort, wsPath);
+  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
+//  ws.beginSSL(wsHost, 443, wsPath);
 
   // event handler
   ws.onEvent(handleWsEvent);
 
   // try ever 5000 again if connection has failed
-  ws.setReconnectInterval(10000);//TODO doesn't work
+  ws.setReconnectInterval(10000);
 
   return 0;
 }
