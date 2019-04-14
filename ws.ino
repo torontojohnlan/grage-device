@@ -5,8 +5,8 @@ WebSocketsClient ws;
 bool setupWS()
 {
   // server address, port and URL
-  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
-//  ws.beginSSL(wsHost, 443, wsPath);
+//  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
+  ws.beginSSL(wsHost, 443, wsPath);
 
   // event handler
   ws.onEvent(handleWsEvent);

@@ -11,8 +11,8 @@
 //static const uint8_t D10 = 1;
 //static const uint8_t _A0 = 17;
 
-const int minSendInterval = 5000;
-const int maxSendInterval = 100;
+const int minSendInterval = 100;
+const int maxSendInterval = 5000;
 
 bool setupIO()
 {
@@ -78,13 +78,16 @@ void handleCommand(JsonObject data) {
     int pin = data["pin"], value = data["value"];
     Serial.printf("digitalWrite pin=%d value=%d\n", pin , value);
     digitalWrite(pin, value);
-    
+    readAndSend();
   } else if (strcmp(command, "pinMode") == 0) {
     int pin = data["pin"], mode = data["mode"];
     Serial.printf("pinMode pin=%d mode=%d\n", pin , mode);
     pinMode(pin, mode);
     
   } else if (strcmp(command, "attachInterrupt") == 0) {
+    //TODO also force pinmode to input?
+    //TODO check if interrupt is already attached
+    
     int pin = data["pin"], mode = data["mode"];
     Serial.printf("attachInturrupt pin=%d mode=%d\n", pin , mode);
     attachInterrupt(digitalPinToInterrupt(pin), handleInterrupt, mode);
