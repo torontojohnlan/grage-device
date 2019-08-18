@@ -7,7 +7,7 @@
 #include <ArduinoJson.h>
 
 //this will be converted to config vars
-const char *devName="mya";
+const char *devName="grage";
 const char *deviceID="test_device";
 
 char jsonBuf[512];

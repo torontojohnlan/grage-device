@@ -1,12 +1,12 @@
-const char *wsHost = "myanee.herokuapp.com", *wsPath = "/ws";
+const char *wsHost = "grage.herokuapp.com", *wsPath = "/ws";
 
 WebSocketsClient ws;
 
 bool setupWS()
 {
   // server address, port and URL
-//  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
-  ws.beginSSL(wsHost, 443, wsPath);
+  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
+//  ws.beginSSL(wsHost, 443, wsPath);
 
   // event handler
   ws.onEvent(handleWsEvent);
@@ -18,11 +18,7 @@ bool setupWS()
 }
 
 void initWSConnection() {
-  StaticJsonDocument<64> doc;
-  doc["command"] = "SUBSCRIBE_SEND";
-  doc["device"] = "test_device";
-  serializeJson(doc, jsonBuf, sizeof(jsonBuf));
-  sendBuf();
+  
 }
 
 void sendBuf(){
@@ -59,10 +55,10 @@ bool handleMessage(char *payload, size_t length) {
     return true;
   }
   JsonObject root = doc.as<JsonObject>();
-  const char* command = root["command"];
-  if (strcmp(command, "SENT") == 0) {
+  const char* command = root["type"];
+  if (strcmp(command, "receive") == 0) {
     handleCommand(root["data"]);
-  } else if (strcmp(command, "ERROR") == 0) {
+  } else if (strcmp(command, "error") == 0) {
     Serial.println("Server sent error:");
     Serial.println(root["error"].as<const char*>());
     return true;

@@ -56,8 +56,8 @@ bool readAndSend()
   }
   lastSend = millis();
   StaticJsonDocument<512> doc;
-  doc["command"] = "PUSH";
-  doc["device"] = deviceID;
+  doc["type"] = "send";
+  doc["id"] = deviceID;
   JsonObject data = doc.createNestedObject("data");
   JsonArray pinReadings = data.createNestedArray("pinReadings");
   for (int pin = 0; pin <= 16; pin++) {
@@ -73,12 +73,13 @@ bool readAndSend()
 
 void handleCommand(JsonObject data) {
   const char* command = data["command"];
-  
+
   if (strcmp(command, "digitalWrite") == 0) {
     int pin = data["pin"], value = data["value"];
     Serial.printf("digitalWrite pin=%d value=%d\n", pin , value);
     digitalWrite(pin, value);
     readAndSend();
+    
   } else if (strcmp(command, "pinMode") == 0) {
     int pin = data["pin"], mode = data["mode"];
     Serial.printf("pinMode pin=%d mode=%d\n", pin , mode);
@@ -87,15 +88,19 @@ void handleCommand(JsonObject data) {
   } else if (strcmp(command, "attachInterrupt") == 0) {
     //TODO also force pinmode to input?
     //TODO check if interrupt is already attached
-    
+
     int pin = data["pin"], mode = data["mode"];
     Serial.printf("attachInturrupt pin=%d mode=%d\n", pin , mode);
     attachInterrupt(digitalPinToInterrupt(pin), handleInterrupt, mode);
-    
+
   } else if (strcmp(command, "detachInterrupt") == 0) {
     int pin = data["pin"];
     Serial.printf("detachInturrupt pin=%d\n", pin);
     detachInterrupt(digitalPinToInterrupt(pin));
+
+  } else if (strcmp(command, "digitalRead") == 0) {
+    Serial.print("digitalRead\n");
+    readAndSend();
     
   } else {
     Serial.printf("didn't recognize command: %s\n", command);
