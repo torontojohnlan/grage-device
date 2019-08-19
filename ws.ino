@@ -1,12 +1,13 @@
 const char *wsHost = "grage.herokuapp.com", *wsPath = "/ws";
+const long refreshRate = 60 * 1000;
 
 WebSocketsClient ws;
 
 bool setupWS()
 {
   // server address, port and URL
-  ws.begin(wsHost, 80, wsPath); //TODO get ssl working
-  //  ws.beginSSL(wsHost, 443, wsPath);
+  //ws.begin(wsHost, 80, wsPath); //TODO get ssl working
+    ws.beginSSL(wsHost, 443, wsPath);
 
   // event handler
   ws.onEvent(handleWsEvent);
@@ -17,16 +18,7 @@ bool setupWS()
   return 0;
 }
 
-const long refreshRate = 60 * 1000;
-long lastConnection = 0;
-
 bool wsConnected = false;
-
-void refreshConnection() {
-  if (millis() - lastConnection > refreshRate) {
-    connectChannel();
-  }
-}
 
 void connectChannel() {
   StaticJsonDocument<128> doc;
@@ -35,7 +27,6 @@ void connectChannel() {
   doc["fromDevice"]=true;
   serializeJson(doc, jsonBuf, sizeof(jsonBuf));
   sendBuf();
-  lastConnection = millis();
 }
 
 void initWSConnection() {
@@ -93,7 +84,5 @@ bool handleMessage(char *payload, size_t length) {
 }
 
 void handleWS() {
-  if (wsConnected)
-    refreshConnection();
   ws.loop();
 }
