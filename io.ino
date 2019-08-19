@@ -26,7 +26,7 @@ void handleIO() {
 
 volatile bool pinChanged = false;
 
-void handleInterrupt() {
+void ICACHE_RAM_ATTR  handleInterrupt() {
   pinChanged = true;
 }
 
@@ -56,8 +56,9 @@ bool readAndSend()
   }
   lastSend = millis();
   StaticJsonDocument<512> doc;
-  doc["type"] = "send";
+  doc["type"] = "data";
   doc["id"] = deviceID;
+  doc["fromDevice"]=true;
   JsonObject data = doc.createNestedObject("data");
   JsonArray pinReadings = data.createNestedArray("pinReadings");
   for (int pin = 0; pin <= 16; pin++) {
@@ -98,10 +99,6 @@ void handleCommand(JsonObject data) {
     Serial.printf("detachInturrupt pin=%d\n", pin);
     detachInterrupt(digitalPinToInterrupt(pin));
 
-  } else if (strcmp(command, "digitalRead") == 0) {
-    Serial.print("digitalRead\n");
-    readAndSend();
-    
   } else {
     Serial.printf("didn't recognize command: %s\n", command);
   }
