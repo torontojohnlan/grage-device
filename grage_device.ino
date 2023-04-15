@@ -6,10 +6,6 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 
-//this will be converted to config vars
-const char *devName="grage";
-const char *deviceID="6fCRj9fqsJdjrqOLbxpivOprvdPZSvDE";
-
 char jsonBuf[512];
 
 void setup()
@@ -17,8 +13,9 @@ void setup()
   Serial.begin(115200);
   //Serial.setDebugOutput(true);
   if (
+      setupConfg() ||
       setupIO() ||
-      setupWifi() ||
+      setupWifi(true) ||
       setupOTA() ||
       setupWS())
   {

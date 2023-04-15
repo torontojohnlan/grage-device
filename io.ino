@@ -57,7 +57,7 @@ bool readAndSend()
   lastSend = millis();
   StaticJsonDocument<512> doc;
   doc["type"] = "data";
-  doc["id"] = deviceID;
+  doc["id"] = config.deviceID;
   doc["fromDevice"]=true;
   JsonObject data = doc.createNestedObject("data");
   JsonArray pinReadings = data.createNestedArray("pinReadings");
