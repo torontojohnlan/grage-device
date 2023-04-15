@@ -1,13 +1,12 @@
-const char *wsHost = "grage.herokuapp.com", *wsPath = "/ws";
-const long refreshRate = 60 * 1000;
+const char *wsPath = "/ws";
 
 WebSocketsClient ws;
 
 bool setupWS()
 {
   // server address, port and URL
-  //ws.begin(wsHost, 80, wsPath); //TODO get ssl working
-    ws.beginSSL(wsHost, 443, wsPath);
+  //ws.begin(config.wsHost, 80, wsPath); //TODO get ssl working
+  ws.beginSSL(config.wsHost, 443, wsPath);
 
   // event handler
   ws.onEvent(handleWsEvent);
@@ -18,15 +17,25 @@ bool setupWS()
   return 0;
 }
 
+const long refreshRate = 60 * 1000;
+long lastConnection = 0;
+int reconnectTries = 0, maxRetries = 3;
 bool wsConnected = false;
+
+void refreshConnection() {
+  if (millis() - lastConnection > refreshRate) {
+    connectChannel();
+  }
+}
 
 void connectChannel() {
   StaticJsonDocument<128> doc;
   doc["type"] = "connect";
-  doc["id"] = deviceID;
+  doc["id"] = config.deviceID;
   doc["fromDevice"]=true;
   serializeJson(doc, jsonBuf, sizeof(jsonBuf));
   sendBuf();
+  lastConnection = millis();
 }
 
 void initWSConnection() {
@@ -43,14 +52,30 @@ void handleWsEvent(WStype_t type, uint8_t *payload, size_t length)
   {
     case WStype_DISCONNECTED:
       wsConnected = false;
-      Serial.printf("[WSc] Disconnected!\n");
+      Serial.printf("[WSc] Disconnected! Retry: %d\n", reconnectTries);
+      reconnectTries++;
+      if(reconnectTries > maxRetries)
+      {
+        Serial.printf("[WSc] Max Retries reached, open config panel!\n"); 
+        if(setupWifi(false)){
+          Serial.printf("Wifi config failed, restart\n"); 
+          ESP.restart();
+        }
+        else
+        {
+          Serial.printf("Wifi config succedded\n"); 
+          reconnectTries = 0;
+        }
+      }
       break;
     case WStype_CONNECTED:
       wsConnected = true;
       Serial.printf("[WSc] Connected to url: %s\n", payload);
+      reconnectTries = 0;
       initWSConnection();
       break;
     case WStype_TEXT:
+      reconnectTries = 0;
       if (handleMessage((char*)payload, length)) {
         //TODO handle error
       }
@@ -62,7 +87,7 @@ void handleWsEvent(WStype_t type, uint8_t *payload, size_t length)
 }
 
 bool handleMessage(char *payload, size_t length) {
-  StaticJsonDocument<128> doc;
+  StaticJsonDocument<256> doc;
   Serial.println(payload);
   DeserializationError err = deserializeJson(doc, payload, length);
   if (err) {
@@ -84,5 +109,7 @@ bool handleMessage(char *payload, size_t length) {
 }
 
 void handleWS() {
+  if (wsConnected)
+    refreshConnection();
   ws.loop();
 }
