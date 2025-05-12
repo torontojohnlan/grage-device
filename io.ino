@@ -32,7 +32,7 @@ void ICACHE_RAM_ATTR  handleInterrupt() {
 
 void handleInterrupts()
 {
-  if (pinChanged)
+  if (pinChanged)//any pin change is sent to channel so other clients are notified.
   {
     if (!readAndSend())
       pinChanged = false;
@@ -48,7 +48,7 @@ void handlePeriodic()
   }
 }
 
-bool readAndSend()
+bool readAndSend() // reads PIN status and send to channel
 {
   //prevent spamming
   if (millis() - lastSend < minSendInterval) {
@@ -68,7 +68,7 @@ bool readAndSend()
     pinReadings.add(analogRead(pin));
   }
   serializeJson(doc, jsonBuf, sizeof(jsonBuf));
-  sendBuf();
+  sendBuf(); //send jsonBuf to socket
   return false;
 }
 

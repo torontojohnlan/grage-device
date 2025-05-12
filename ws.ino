@@ -1,3 +1,14 @@
+// main script where it maintains websocket session
+// A controller acts as passive client (mostly), it is never the initiating party to send type "data" to server except when there is a pin status change
+// (it does, though, initiating  socket housekeeping control types)
+// This controller as a client of server side ws.ts only process 
+//            1. type="data" messages. 
+//                    There is sub-command in the "data" structure, including "digitalWrite", "pinMode", "attachInterrupt" etc.
+//                    sub-command is handled in io.ino
+//            2. type="rping" messages. 
+//                    "rping" stands for request ping. It's basically another client on same channel asking current reading
+//                    of this device. We simply call readAndSend() here, which reads pin statuss and send back to channel
+//            3. Although this script also include "error" type, but ws.ts and app.ts from server side never sends this type
 const char *wsPath = "/ws";
 
 WebSocketsClient ws;
@@ -38,7 +49,7 @@ void connectChannel() {
   lastConnection = millis();
 }
 
-void initWSConnection() {
+void initWSConnection() { // This should really be called "initChannelConnection" as this is not to initialize WS connection. Instead, it finds correct channel on server to connect to with device ID
   connectChannel();
 }
 
@@ -47,32 +58,32 @@ void sendBuf() {
 }
 
 void handleWsEvent(WStype_t type, uint8_t *payload, size_t length)
-{
+{ // handles different message types that are received from channel (from server)
   switch (type)
   {
-    case WStype_DISCONNECTED:
-      wsConnected = false;
-      Serial.printf("[WSc] Disconnected! Retry: %d\n", reconnectTries);
-      reconnectTries++;
-      if(reconnectTries > maxRetries)
-      {
-        Serial.printf("[WSc] Max Retries reached, open config panel!\n"); 
-        if(setupWifi(false)){
-          Serial.printf("Wifi config failed, restart\n"); 
-          ESP.restart();
-        }
-        else
-        {
-          Serial.printf("Wifi config succedded\n"); 
-          reconnectTries = 0;
-        }
-      }
+    case WStype_DISCONNECTED:  //comment out whole "case disconnected" section so instead of calling wifi setup page, it will just try to reconnect to server
+//      wsConnected = false;
+//      Serial.printf("[WSc] Disconnected! Retry: %d\n", reconnectTries);
+//      reconnectTries++;
+//      if(reconnectTries > maxRetries)
+//      {
+//        Serial.printf("[WSc] Max Retries reached, open config panel!\n"); 
+//        if(setupWifi(false)){
+//          Serial.printf("Wifi config failed, restart\n"); 
+//          ESP.restart();
+//        }
+//        else
+//        {
+//          Serial.printf("Wifi config succedded\n"); 
+//          reconnectTries = 0;
+//        }
+//      }
       break;
     case WStype_CONNECTED:
       wsConnected = true;
       Serial.printf("[WSc] Connected to url: %s\n", payload);
       reconnectTries = 0;
-      initWSConnection();
+      initWSConnection(); // pick a correct server channel to connect to. 
       break;
     case WStype_TEXT:
       reconnectTries = 0;
